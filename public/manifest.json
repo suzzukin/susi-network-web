@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "name": "susi network",
+  "short_name": "susi network",
+  "description": "susi network - Secure network service",
   "icons": [
     {
       "src": "favicon.ico",
@@ -19,7 +20,13 @@
     }
   ],
   "start_url": ".",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#9495e6",
+  "categories": ["utilities", "productivity", "security"],
+  "lang": "ru-RU",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }
