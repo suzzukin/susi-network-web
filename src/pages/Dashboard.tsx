@@ -65,13 +65,10 @@ interface BackendUser {
   promo: number;
 }
 
-interface PaymentLink {
-  payment_link: string;
-  payment_text: string;
-}
-
 interface PaymentResponse {
-  payment_links: PaymentLink[];
+  payment_link: string;
+  payment_id: number;
+  order_id: string;
 }
 
 const Dashboard = () => {
@@ -80,7 +77,7 @@ const Dashboard = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedMonths, setSelectedMonths] = useState('1');
-  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const bgColor = useColorModeValue('gray.50', 'gray.900');
@@ -169,14 +166,13 @@ const Dashboard = () => {
         body: JSON.stringify({ tariff: parseInt(selectedMonths) }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create payment');
-      }
+      if (!response.ok) throw new Error('Failed to create payment');
 
       const data: PaymentResponse = await response.json();
-      setPaymentLinks(data.payment_links);
+      setPaymentUrl(data.payment_link);
+      window.open(data.payment_link, '_blank', 'noopener,noreferrer');
+      handleCloseModal();
     } catch (error) {
-      console.error('Error creating payment:', error);
       toast({
         title: 'Ошибка',
         description: 'Не удалось создать платеж',
@@ -190,7 +186,7 @@ const Dashboard = () => {
   };
 
   const handleCloseModal = () => {
-    setPaymentLinks([]);
+    setPaymentUrl(null);
     setSelectedMonths('1');
     onClose();
   };
@@ -390,91 +386,75 @@ const Dashboard = () => {
             <VStack align="start" spacing={1}>
               <Text>Продление подписки</Text>
             </VStack>
-            {!isLoading && paymentLinks.length === 0 && (
             <Text fontSize="sm" color="gray.500">
               Выберите период подписки
             </Text>
-            )}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <VStack spacing={6} align="stretch">
-              {!isLoading && paymentLinks.length === 0 && (
-                  <SimpleGrid columns={2} spacing={4}>
-                  <Card
-                    cursor="pointer"
-                    onClick={() => setSelectedMonths('1')}
-                    bg={selectedMonths === '1' ? (colorMode === 'dark' ? 'blue.900' : 'blue.50') : 'transparent'}
-                    borderColor={selectedMonths === '1' ? 'blue.500' : 'gray.200'}
-                    borderWidth="1px"
-                    _hover={{ borderColor: 'blue.500', bg: colorMode === 'dark' ? 'blue.900' : 'blue.50' }}
-                    transition="all 0.2s"
-                  >
-                    <CardBody>
-                      <VStack spacing={2}>
-                        <Text fontWeight="bold">1 месяц</Text>
-                      </VStack>
-                    </CardBody>
-                  </Card>
-                  <Card
-                    cursor="pointer"
-                    onClick={() => setSelectedMonths('3')}
-                    bg={selectedMonths === '3' ? (colorMode === 'dark' ? 'blue.900' : 'blue.50') : 'transparent'}
-                    borderColor={selectedMonths === '3' ? 'blue.500' : 'gray.200'}
-                    borderWidth="1px"
-                    _hover={{ borderColor: 'blue.500', bg: colorMode === 'dark' ? 'blue.900' : 'blue.50' }}
-                    transition="all 0.2s"
-                  >
-                    <CardBody>
-                      <VStack spacing={2}>
-                        <Text fontWeight="bold">3 месяца</Text>
-                      </VStack>
-                    </CardBody>
-                  </Card>
-                </SimpleGrid>
-              )}
+              <SimpleGrid columns={3} spacing={4}>
+                <Card
+                  cursor="pointer"
+                  onClick={() => setSelectedMonths('1')}
+                  bg={selectedMonths === '1' ? (colorMode === 'dark' ? 'blue.900' : 'blue.50') : 'transparent'}
+                  borderColor={selectedMonths === '1' ? 'blue.500' : 'gray.200'}
+                  borderWidth="1px"
+                  _hover={{ borderColor: 'blue.500', bg: colorMode === 'dark' ? 'blue.900' : 'blue.50' }}
+                  transition="all 0.2s"
+                >
+                  <CardBody>
+                    <VStack spacing={2}>
+                      <Text fontWeight="bold">1 месяц</Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+                <Card
+                  cursor="pointer"
+                  onClick={() => setSelectedMonths('3')}
+                  bg={selectedMonths === '3' ? (colorMode === 'dark' ? 'blue.900' : 'blue.50') : 'transparent'}
+                  borderColor={selectedMonths === '3' ? 'blue.500' : 'gray.200'}
+                  borderWidth="1px"
+                  _hover={{ borderColor: 'blue.500', bg: colorMode === 'dark' ? 'blue.900' : 'blue.50' }}
+                  transition="all 0.2s"
+                >
+                  <CardBody>
+                    <VStack spacing={2}>
+                      <Text fontWeight="bold">3 месяца</Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+                <Card
+                  cursor="pointer"
+                  onClick={() => setSelectedMonths('5')}
+                  bg={selectedMonths === '5' ? (colorMode === 'dark' ? 'blue.900' : 'blue.50') : 'transparent'}
+                  borderColor={selectedMonths === '5' ? 'blue.500' : 'gray.200'}
+                  borderWidth="1px"
+                  _hover={{ borderColor: 'blue.500', bg: colorMode === 'dark' ? 'blue.900' : 'blue.50' }}
+                  transition="all 0.2s"
+                >
+                  <CardBody>
+                    <VStack spacing={2}>
+                      <Text fontWeight="bold">5 месяцев</Text>
+                      <Badge colorScheme="green">Выгодно</Badge>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </SimpleGrid>
 
-              {paymentLinks.length > 0 ? (
-                <VStack spacing={4} align="stretch">
-                  <Text fontSize="sm" color="gray.500">
-                    Выберите способ оплаты:
-                  </Text>
-                  {paymentLinks.map((link, index) => (
-                    <Button
-                      key={index}
-                      colorScheme="blue"
-                      size="lg"
-                      width="100%"
-                      onClick={() => window.open(link.payment_link, '_blank', 'noopener,noreferrer')}
-                      leftIcon={<ExternalLinkIcon />}
-                      _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
-                      transition="all 0.2s"
-                    >
-                      {link.payment_text}
-                    </Button>
-                  ))}
-                  <Text fontSize="xs" color="gray.500" textAlign="center">
-                    Вы будете перенаправлены на страницу оплаты
-                  </Text>
-                  <Text fontSize="xs" color="gray.500" textAlign="center">
-                    После оплаты подписка будет автоматически продлена
-                  </Text>
-                </VStack>
-              ) : (
-                <VStack spacing={4}>
-                  <Button
-                    colorScheme="blue"
-                    size="lg"
-                    width="100%"
-                    onClick={handleRenewal}
-                    isLoading={isLoading}
-                    loadingText="Создание платежа..."
-                    leftIcon={<CheckCircleIcon />}
-                  >
-                    Создать платеж
-                  </Button>
-                </VStack>
-              )}
+              <VStack spacing={4}>
+                <Button
+                  colorScheme="blue"
+                  size="lg"
+                  width="100%"
+                  onClick={handleRenewal}
+                  isLoading={isLoading}
+                  loadingText="Создание платежа..."
+                  leftIcon={<CheckCircleIcon />}
+                >
+                  Создать платеж
+                </Button>
+              </VStack>
             </VStack>
           </ModalBody>
         </ModalContent>
